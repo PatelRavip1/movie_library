@@ -1,6 +1,5 @@
 use actix_cors::Cors;
 use actix_web::{http::header, web, App, HttpResponse, HttpServer, Responder};
-// use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -53,7 +52,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .service(web::resource("/add-movie").route(web::post().to(add_movie)))
+            .service(web::resource("/add").route(web::post().to(add_movie)))
             .route("/", web::get().to(index))
     })
     .bind("127.0.0.1:8080")?
