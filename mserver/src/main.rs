@@ -3,6 +3,7 @@ use actix_web::{http::header, web, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::io::Read;    
 
 #[derive(Deserialize)]
 struct Movie {
@@ -20,7 +21,7 @@ async fn add_movie(movie: web::Json<Movie>) -> impl Responder {
 
     if let Err(e) = writeln!(
         file,
-        "Title: {}, Release Year: {}",
+        "Title: {}, ReleaseYear: {}",
         movie.title, movie.release_year
     ) {
         eprintln!("Failed to write to file: {}", e);
@@ -33,6 +34,20 @@ async fn add_movie(movie: web::Json<Movie>) -> impl Responder {
 // Handler for GET "/" endpoint
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Server is running")
+}
+
+// get movies from file
+async fn get_movies() -> impl Responder {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("movies.txt")
+        .expect("Unable to open file");
+
+    let mut content = String::new();
+    file.read_to_string(&mut content) 
+        .expect("Unable to read file");
+
+    HttpResponse::Ok().body(content)
 }
 
 #[actix_web::main]
@@ -54,9 +69,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(web::resource("/add").route(web::post().to(add_movie)))
             .route("/", web::get().to(index))
+            .route("/get", web::get().to(get_movies))
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
 }
 //curl -X POST -H "Content-Type: application/json" -d '{"title": "Iron man", "release_year": "2008"}' http://127.0.0.1:8080/add-movie
+//curl http://127.0.0.1:8080/get
